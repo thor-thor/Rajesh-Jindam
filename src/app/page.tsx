@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 /* ─────────────────────────────────────────────
    DATA
@@ -12,7 +12,8 @@ const NAV_LINKS = [
   { href: "#projects",   label: "Projects"   },
   { href: "#experience", label: "Experience" },
   { href: "#education",  label: "Education"  },
-  { href: "#contact",    label: "Contact"    },
+  { href: "#resume",    label: "Resume"    },
+  { href: "#contact",    label: "Contact"   },
 ];
 
 const SKILLS = [
@@ -174,18 +175,98 @@ const CERTIFICATIONS = [
   },
 ];
 
+function useInView(threshold = 0.1) {
+  const [ref, setRef] = useState<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ref) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(ref);
+        }
+      },
+      { threshold }
+    );
+    observer.observe(ref);
+    return () => observer.disconnect();
+  }, [ref, threshold]);
+
+  return { ref: setRef, isVisible };
+}
+
+function useTilt() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = element.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -5;
+      const rotateY = ((x - centerX) / centerX) * 5;
+      element.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+    };
+
+    const handleMouseLeave = () => {
+      element.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+    };
+
+    element.addEventListener('mousemove', handleMouseMove);
+    element.addEventListener('mouseleave', handleMouseLeave);
+    return () => {
+      element.removeEventListener('mousemove', handleMouseMove);
+      element.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  return ref;
+}
+
+function AnimatedSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const { ref, isVisible } = useInView(0.1);
+  return (
+    <div ref={ref} className={`${className} ${isVisible ? "animate-fade-in-up" : ""}`} style={{ opacity: isVisible ? 1 : 0 }}>
+      {children}
+    </div>
+  );
+}
+
 /* ─────────────────────────────────────────────
    COMPONENTS
 ───────────────────────────────────────────── */
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    }
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+  };
 
   return (
     <nav
@@ -201,15 +282,59 @@ function Navbar() {
         <ul className="navbar-links">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
-              <a href={link.href}>{link.label}</a>
+              <a href={link.href} className="nav-link">{link.label}</a>
             </li>
           ))}
         </ul>
-        <a href="/#contact" id="nav-cta" style={{ padding: "0.55rem 1.25rem", fontSize: "0.82rem" }}>
-          Hire Me ✉️
-        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+            <span className="moon">🌙</span>
+            <span className="sun">☀️</span>
+          </button>
+          <a href="/#resume" className="btn btn-outline" style={{ padding: "0.55rem 1.25rem", fontSize: "0.82rem" }}>
+            Resume 📄
+          </a>
+          <a href="/#contact" className="btn btn-primary" id="nav-cta" style={{ padding: "0.55rem 1.25rem", fontSize: "0.82rem" }}>
+            Hire Me ✉️
+          </a>
+        </div>
       </div>
     </nav>
+  );
+}
+
+function CustomCursor() {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+      setVisible(true);
+    };
+    const handleMouseLeave = () => setVisible(false);
+    const handleMouseEnter = () => setVisible(true);
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseenter", handleMouseEnter);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseenter", handleMouseEnter);
+    };
+  }, []);
+
+  return (
+    <div
+      className="cursor-glow"
+      style={{
+        left: position.x,
+        top: position.y,
+        opacity: visible ? 1 : 0,
+      }}
+    />
   );
 }
 
@@ -260,8 +385,8 @@ function Hero() {
               { value: "5+", label: "Tech Stacks" },
               { value: "AI", label: "Integrated Systems" },
               { value: "100%", label: "Passion" },
-            ].map((s) => (
-              <div className="stat" key={s.label}>
+            ].map((s, i) => (
+              <div className={`stat stagger-${i + 1}`} key={s.label} style={{ opacity: 0, animation: `fadeInUp 0.6s ease forwards`, animationDelay: `${0.5 + i * 0.15}s` }}>
                 <span className="stat-value">{s.value}</span>
                 <span className="stat-label">{s.label}</span>
               </div>
@@ -351,17 +476,26 @@ function Skills() {
         </div>
 
         <div className="skills-grid">
-          {SKILLS.map((cat) => (
-            <div className="card skill-category" key={cat.title}>
+          {SKILLS.map((cat, i) => (
+            <div 
+              className="card skill-category" 
+              key={cat.title}
+              style={{ 
+                opacity: 0, 
+                animation: `fadeInUp 0.6s ease forwards`,
+                animationDelay: `${0.2 + i * 0.1}s`
+              }}
+            >
               <h3>
                 <span>{cat.icon}</span>
                 {cat.title}
               </h3>
               <div className="skill-list">
-                {cat.tags.map((tag) => (
+                {cat.tags.map((tag, j) => (
                   <span
                     key={tag}
                     className={`skill-tag ${cat.color}`}
+                    style={{ animationDelay: `${0.3 + i * 0.1 + j * 0.05}s` }}
                   >
                     {tag}
                   </span>
@@ -392,8 +526,17 @@ function Projects() {
         </div>
 
         <div className="projects-grid">
-          {PROJECTS.map((project) => (
-            <article className="project-card" key={project.id} id={`project-${project.id}`}>
+          {PROJECTS.map((project, i) => (
+            <article 
+              className="project-card" 
+              key={project.id} 
+              id={`project-${project.id}`}
+              style={{ 
+                opacity: 0, 
+                animation: `fadeInUp 0.6s ease forwards`,
+                animationDelay: `${0.2 + i * 0.15}s`
+              }}
+            >
               {/* Banner */}
               <div className="project-banner">
                 <div
@@ -763,17 +906,75 @@ function Footer() {
   return (
     <footer className="footer">
       <div className="container">
+        <div className="footer-links">
+          <a href="/#about">About</a>
+          <a href="/#skills">Skills</a>
+          <a href="/#projects">Projects</a>
+          <a href="/#experience">Experience</a>
+          <a href="/#education">Education</a>
+          <a href="/#resume">Resume</a>
+          <a href="/#contact">Contact</a>
+        </div>
         <p suppressHydrationWarning>
-          © {year} Rajesh Jindam — Built with{" "}
-          © {year} Rajesh Jindam — Built with{" "}
-          <span>♥</span> using Next.js 16 and Tailwind CSS v4.
-          <br />
-          <span style={{ fontSize: "0.78rem", opacity: 0.6 }}>
-            Full Stack Developer · AI Engineer · Open to Opportunities
-          </span>
+          © {year} Rajesh Jindam — Built with <span>♥</span> using Next.js 16 and Tailwind CSS v4.
+        </p>
+        <p style={{ fontSize: "0.78rem", opacity: 0.6, marginTop: "0.5rem" }}>
+          Full Stack Developer · AI Engineer · Open to Opportunities
         </p>
       </div>
     </footer>
+  );
+}
+
+function Resume() {
+  return (
+    <section id="resume">
+      <div className="container">
+        <div className="section-header animate-fade-in-up">
+          <div className="section-tag">Resume</div>
+          <h2 className="section-title">
+            Get My <span className="text-gradient">Resume</span>
+          </h2>
+          <div className="divider" />
+          <p className="section-desc">
+            Download my resume to learn more about my experience and skills.
+          </p>
+        </div>
+
+        <div className="resume-content" style={{ textAlign: "center", maxWidth: 600, margin: "0 auto" }}>
+          <div className="resume-preview" style={{ 
+            background: "var(--bg-card)", 
+            border: "1px solid var(--border)", 
+            borderRadius: "var(--radius-xl)", 
+            padding: "2rem",
+            marginBottom: "2rem"
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {[
+                { label: "Full Stack & AI Engineer", value: "2+ Years Experience" },
+                { label: "Tech Stack", value: "Python, React, Node.js, AI/ML" },
+                { label: "Projects", value: "3+ Production Apps" },
+                { label: "Open to", value: "Full-time & Freelance" },
+              ].map((item) => (
+                <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>{item.label}</span>
+                  <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <a 
+            href="/rajesh-jindam-resume.pdf"
+            download="Rajesh-Jindam-Resume.pdf"
+            className="btn btn-primary"
+            style={{ padding: "1rem 2.5rem", fontSize: "1rem" }}
+          >
+            📄 Download Resume
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -784,6 +985,7 @@ function Footer() {
 export default function Home() {
   return (
     <>
+      <CustomCursor />
       <Navbar />
       <main>
         <Hero />
@@ -793,6 +995,7 @@ export default function Home() {
         <Experience />
         <Education />
         <Contact />
+        <Resume />
       </main>
       <Footer />
     </>
