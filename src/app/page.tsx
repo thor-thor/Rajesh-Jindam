@@ -95,22 +95,22 @@ const PROJECTS = [
     demo: "https://github.com/thor-thor/Python-CCTV-IOT.git",
   },
   {
-    id: "trendora",
-    title: "Trendora - E-Commerce Platform",
+    id: "luxemart",
+    title: "LuxeMart - AI-Powered E-Commerce Platform",
     category: "Full-Stack Web Application",
-    status: "In Progress",
+    status: "Live",
     emoji: "🛒",
     gradient: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%)",
     accentColor: "#6366f1",
-    desc: "A full-stack e-commerce platform using MERN stack with secure JWT-based authentication supporting 500+ users.",
+    desc: "A full-stack e-commerce platform using React, FastAPI, and PostgreSQL with secure authentication and AI-based product recommendations.",
     features: [
-      "Built scalable RESTful APIs for product, cart, and order management using Node.js and Express.js",
-      "Integrated MongoDB for efficient data storage and optimized queries, improving response time by 30%",
-      "Implemented user-friendly UI with React.js, enhancing user experience and seamless navigation",
-      "Secure JWT-based authentication system",
+      "Developed LuxeMart, a full-stack e-commerce platform using React, FastAPI, and PostgreSQL",
+      "Implemented secure authentication, product browsing, cart, and order management features",
+      "Designed a modern, responsive UI with animations, image carousels, and light/dark mode",
+      "Integrated payment functionality and AI-based product recommendations for enhanced user experience",
     ],
-    tech: ["React", "Node.js", "Express.js", "MongoDB", "JWT", "REST APIs"],
-    github: "https://github.com/thor-thor/Trendora",
+    tech: ["React", "FastAPI", "PostgreSQL", "JWT", "REST APIs", "AI/ML"],
+    github: "https://github.com/thor-thor/LuxeMart",
     demo: "http://localhost:3000",
   },
 ];
@@ -965,8 +965,8 @@ function Resume() {
           </div>
 
           <a 
-            href="/rajesh-jindam-resume.pdf"
-            download="Rajesh-Jindam-Resume.pdf"
+            href="/rajeshjindam.pdf"
+            download="rajeshjindam.pdf"
             className="btn btn-primary"
             style={{ padding: "1rem 2.5rem", fontSize: "1rem" }}
           >
