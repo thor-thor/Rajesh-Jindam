@@ -110,7 +110,7 @@ const PROJECTS = [
       "Integrated payment functionality and AI-based product recommendations for enhanced user experience",
     ],
     tech: ["React", "FastAPI", "PostgreSQL", "JWT", "REST APIs", "AI/ML"],
-    github: "https://github.com/thor-thor/LuxeMart",
+    github: "https://github.com/thor-thor/LuxeMart-AI-Ecommerce.git",
     demo: "http://localhost:3000",
   },
 ];
